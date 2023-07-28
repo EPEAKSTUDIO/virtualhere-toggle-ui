@@ -6,10 +6,7 @@ class VirtualHereToggleUI:
     def __init__(self, root):
         self.root = root
         self.root.title("VirtualHere Toggle UI")
-        self.root.geometry("400x600")  # Set the initial window size
-
-        # Center the window on the screen
-        self.root.eval('tk::PlaceWindow . center')
+        self.root.attributes("-fullscreen", True)  # Open in fullscreen mode
 
         # Create a frame to hold the toggle and notifications at the center of the screen
         center_frame = ttk.Frame(self.root)
@@ -19,16 +16,19 @@ class VirtualHereToggleUI:
         center_frame.grid_rowconfigure(0, weight=7)
         center_frame.grid_rowconfigure(1, weight=3)
 
-        # Create the on/off toggle button
+        # Create the on/off toggle button (large 16:9 ratio rectangle)
         self.toggle_var = tk.BooleanVar()
-        self.toggle_button = ttk.Checkbutton(
+        self.toggle_button = tk.Button(
             center_frame,
-            text="VirtualHere Service",
+            text="USB over IP",
             variable=self.toggle_var,
             command=self.on_toggle_change,
-            style="Toggle.TCheckbutton"
+            font=("Helvetica", 20),
+            relief="flat",
+            borderwidth=0
         )
-        self.toggle_button.pack(expand=True)
+        self.toggle_button.pack(expand=True, fill=tk.BOTH)
+        self.toggle_var.trace_add('write', self.update_toggle_color)  # Update the toggle color when the status changes
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
@@ -38,30 +38,40 @@ class VirtualHereToggleUI:
         )
         self.notification_label.pack(expand=True)
 
+        # Create the close button (red cross) top right
+        close_btn = tk.Label(
+            self.root,
+            text="X",
+            font=("Helvetica", 12, "bold"),
+            fg="red",
+            cursor="hand2"
+        )
+        close_btn.place(x=self.root.winfo_screenwidth()-25, y=0, anchor="ne")
+        close_btn.bind("<Button-1>", self.close_app)
+
         # Set the initial position of the toggle based on the service status
         self.set_initial_toggle_position()
 
-    def on_toggle_change(self):
+    def on_toggle_change(self, *_):
         # Handle the action when the toggle is switched on/off
         if self.toggle_var.get():
-            self.notification_label.config(text="Starting service...")
+            self.notification_label.config(text="Starting service...", fg="orange")
             try:
                 subprocess.run(['sudo', 'systemctl', 'start', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service started successfully.")
+                self.notification_label.config(text="Service started successfully.", fg="green")
             except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to start service.")
+                self.notification_label.config(text="Failed to start service.", fg="red")
                 self.toggle_var.set(False)  # Set the toggle back to "OFF"
         else:
-            self.notification_label.config(text="Stopping service...")
+            self.notification_label.config(text="Stopping service...", fg="orange")
             try:
                 subprocess.run(['sudo', 'systemctl', 'stop', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service stopped successfully.")
+                self.notification_label.config(text="Service stopped successfully.", fg="green")
             except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to stop service.")
+                self.notification_label.config(text="Failed to stop service.", fg="red")
 
-        # Update the toggle button to reflect the new status
-        self.toggle_button.config(text="VirtualHere Service" + (" ON" if self.toggle_var.get() else " OFF"))
-        self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
+        self.toggle_button.config(text="USB over IP")  # Always show "USB over IP" on the button
+        self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
 
     def set_initial_toggle_position(self):
         # Get the initial status of the service from systemctl
@@ -74,7 +84,11 @@ class VirtualHereToggleUI:
 
         # Set the initial position of the toggle and update the UI accordingly
         self.toggle_var.set(initial_status)
-        self.toggle_button.config(text="VirtualHere Service" + (" ON" if initial_status else " OFF"))
+        self.toggle_button.config(text="USB over IP", fg="green" if initial_status else "red")
+
+    def update_toggle_color(self, *_):
+        # Update the toggle color based on the status
+        self.toggle_button.config(fg="green" if self.toggle_var.get() else "red")
 
     def close_app(self, event):
         # Action to close the application gracefully
