@@ -21,14 +21,12 @@ class VirtualHereToggleUI:
         self.toggle_button = tk.Button(
             center_frame,
             text="USB over IP",
-            variable=self.toggle_var,
-            command=self.on_toggle_change,
             font=("Helvetica", 20),
             relief="flat",
-            borderwidth=0
+            borderwidth=0,
+            command=self.on_toggle_change
         )
         self.toggle_button.pack(expand=True, fill=tk.BOTH)
-        self.toggle_var.trace_add('write', self.update_toggle_color)  # Update the toggle color when the status changes
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
@@ -52,7 +50,7 @@ class VirtualHereToggleUI:
         # Set the initial position of the toggle based on the service status
         self.set_initial_toggle_position()
 
-    def on_toggle_change(self, *_):
+    def on_toggle_change(self):
         # Handle the action when the toggle is switched on/off
         if self.toggle_var.get():
             self.notification_label.config(text="Starting service...", fg="orange")
@@ -70,7 +68,7 @@ class VirtualHereToggleUI:
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to stop service.", fg="red")
 
-        self.toggle_button.config(text="USB over IP")  # Always show "USB over IP" on the button
+        self.toggle_button.config(text="USB over IP", fg="green" if self.toggle_var.get() else "red")
         self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
 
     def set_initial_toggle_position(self):
@@ -85,10 +83,6 @@ class VirtualHereToggleUI:
         # Set the initial position of the toggle and update the UI accordingly
         self.toggle_var.set(initial_status)
         self.toggle_button.config(text="USB over IP", fg="green" if initial_status else "red")
-
-    def update_toggle_color(self, *_):
-        # Update the toggle color based on the status
-        self.toggle_button.config(fg="green" if self.toggle_var.get() else "red")
 
     def close_app(self, event):
         # Action to close the application gracefully
