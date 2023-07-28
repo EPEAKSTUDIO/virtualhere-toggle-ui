@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script version
-VERSION="v0.5"
+VERSION="v0.6"
 
 # Function to display status messages
 function display_status() {
@@ -78,7 +78,8 @@ check_command
 
 # Create desktop shortcut for manual launch
 display_status "Creating desktop shortcut"
-cat > ~/Desktop/VirtualHere_Toggle_UI.desktop << EOL
+desktop_file="/home/$SUDO_USER/Desktop/VirtualHere_Toggle_UI.desktop"
+cat > "$desktop_file" << EOL
 [Desktop Entry]
 Name=VirtualHere Toggle UI
 Exec=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
@@ -89,7 +90,7 @@ EOL
 check_command
 
 # Set permission for the desktop shortcut
-chmod +x ~/Desktop/VirtualHere_Toggle_UI.desktop
+chmod +x "$desktop_file"
 check_command
 
 # Ask user if they want to reboot the system
