@@ -1,7 +1,7 @@
 #!/bin/bash
-
 # Script version
-VERSION="v0.6"
+
+VERSION="v0.7"
 
 # Function to display status messages
 function display_status() {
@@ -25,6 +25,9 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root (use sudo)" 
    exit 1
 fi
+
+# Display version information
+echo "VirtualHere Toggle UI Installer (Version: $VERSION)"
 
 # Check if python3 and python3-tk are installed
 display_status "Checking for Python 3 and Python Tkinter"
