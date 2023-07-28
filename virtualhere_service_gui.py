@@ -6,7 +6,7 @@ class VirtualHereToggleUI:
     def __init__(self, root):
         self.root = root
         self.root.title("VirtualHere Toggle UI")
-        self.root.attributes("-fullscreen", True)  # Open in fullscreen mode
+        self.root.wm_attributes('-fullscreen', True)  # Open in fullscreen mode
 
         # Create a frame to hold the toggle and notifications at the center of the screen
         center_frame = ttk.Frame(self.root)
@@ -16,18 +16,21 @@ class VirtualHereToggleUI:
         center_frame.grid_rowconfigure(0, weight=7)
         center_frame.grid_rowconfigure(1, weight=3)
 
-        # Create the on/off toggle button (large 16:9 ratio tile)
+        # Create a custom button style (large 16:9 ratio tile)
+        self.root.style = ttk.Style()
+        self.root.style.configure("Tile.TLabel", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
+
+        # Create the on/off toggle button
         self.toggle_var = tk.BooleanVar()
-        self.toggle_button = ttk.Button(
+        self.toggle_button = ttk.Label(
             center_frame,
             text="USB over IP",
-            variable=self.toggle_var,
-            command=self.on_toggle_change,
-            font=("Helvetica", 20, "bold"),
-            relief="flat",
-            borderwidth=0
+            style="Tile.TLabel"
         )
         self.toggle_button.pack(expand=True, fill=tk.BOTH)
+
+        # Bind the on-click event to the toggle button
+        self.toggle_button.bind("<Button-1>", self.on_toggle_change)
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
@@ -48,16 +51,13 @@ class VirtualHereToggleUI:
         close_btn.place(x=self.root.winfo_screenwidth()-25, y=0, anchor="ne")
         close_btn.bind("<Button-1>", self.close_app)
 
-        # Create custom button styles
-        self.root.style = ttk.Style()
-        self.root.style.configure("Toggle.TButton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
-        self.root.style.configure("Toggle.TButtonRed", background="red", foreground="white", font=("Helvetica", 20, "bold"))
-
         # Set the initial position of the toggle based on the service status
         self.set_initial_toggle_position()
 
-    def on_toggle_change(self):
-        # Handle the action when the toggle is switched on/off
+    def on_toggle_change(self, event):
+        # Handle the action when the toggle is clicked
+        self.toggle_var.set(not self.toggle_var.get())
+
         if self.toggle_var.get():
             self.notification_label.config(text="Starting service...", fg="orange")
             try:
@@ -74,7 +74,7 @@ class VirtualHereToggleUI:
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to stop service.", fg="red")
 
-        self.toggle_button.config(style="Toggle.TButton" if self.toggle_var.get() else "Toggle.TButtonRed")
+        self.toggle_button.config(style="Tile.TLabel" if self.toggle_var.get() else "Tile.TLabelRed")
         self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
 
     def set_initial_toggle_position(self):
@@ -92,7 +92,7 @@ class VirtualHereToggleUI:
 
     def update_toggle_color(self):
         # Update the toggle color based on the status
-        self.toggle_button.config(style="Toggle.TButton" if self.toggle_var.get() else "Toggle.TButtonRed")
+        self.toggle_button.config(style="Tile.TLabel" if self.toggle_var.get() else "Tile.TLabelRed")
 
     def close_app(self, event):
         # Action to close the application gracefully
@@ -100,6 +100,10 @@ class VirtualHereToggleUI:
 
 def main():
     root = tk.Tk()
+
+    # Create a custom button style for the red color
+    root.style = ttk.Style()
+    root.style.configure("Tile.TLabelRed", background="red", foreground="white", font=("Helvetica", 20, "bold"))
 
     app = VirtualHereToggleUI(root)
     root.mainloop()
