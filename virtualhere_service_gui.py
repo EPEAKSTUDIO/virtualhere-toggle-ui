@@ -6,23 +6,25 @@ class VirtualHereToggleUI:
     def __init__(self, root):
         self.root = root
         self.root.title("VirtualHere Toggle UI")
-        self.root.geometry("800x480")  # Set the window size to 800x480 (16:9 ratio)
-        self.root.attributes("-fullscreen", True)  # Open in fullscreen mode
+        self.root.geometry("400x600")  # Set the initial window size
 
-        # Create the toggle button (large 16:9 ratio tile)
+        # Center the window on the screen
+        self.root.eval('tk::PlaceWindow . center')
+
+        # Configure the vertical space to take about 70% of the screen's height
+        self.root.grid_rowconfigure(0, weight=7)
+        self.root.grid_rowconfigure(1, weight=3)
+
+        # Create the on/off toggle button
         self.toggle_var = tk.BooleanVar()
-        self.toggle_button = ttk.Button(
+        self.toggle_button = ttk.Checkbutton(
             self.root,
-            text="USB over IP",
+            text="VirtualHere Service",
             variable=self.toggle_var,
             command=self.on_toggle_change,
-            font=("Helvetica", 20, "bold"),
-            relief="flat",
-            borderwidth=0,
-            background="#4CAF50",  # Green color
-            foreground="white"  # White text color
+            style="Toggle.TCheckbutton"
         )
-        self.toggle_button.place(relx=0.5, rely=0.5, anchor="center")
+        self.toggle_button.grid(row=0, column=0, sticky="nsew")
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
@@ -30,51 +32,48 @@ class VirtualHereToggleUI:
             text="",
             font=("Helvetica", 12)
         )
-        self.notification_label.place(relx=0.5, rely=0.9, anchor="s")  # Display below the button
+        self.notification_label.grid(row=1, column=0, sticky="nsew")
 
-        # Bind the close event to the root
-        self.root.bind("<Escape>", self.close_app)
+        # Create the close button (X symbol)
+        close_btn = tk.Label(
+            self.root,
+            text="X",
+            font=("Helvetica", 12, "bold"),
+            fg="red",
+            cursor="hand2"
+        )
+        close_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
+        close_btn.bind("<Button-1>", self.close_app)
 
-        # Set the initial position of the toggle based on the service status
-        self.set_initial_toggle_position()
+        # Set the initial position of the toggle based on the service status (change this according to your logic)
+        self.set_initial_toggle_position()  # Add your logic to determine the initial status
 
     def on_toggle_change(self):
-        # Handle the action when the toggle is clicked
-        self.toggle_var.set(not self.toggle_var.get())
-
+        # Handle the action when the toggle is switched on/off
         if self.toggle_var.get():
-            self.notification_label.config(text="Starting service...", fg="orange")
-            try:
-                subprocess.run(['sudo', 'systemctl', 'start', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service started successfully.", fg="green")
-            except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to start service.", fg="red")
-                self.toggle_var.set(False)  # Set the toggle back to "OFF"
+            self.notification_label.config(text="Starting service...")
+            # Add the action to start the virtualhere.service here (async if needed)
+            self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
         else:
-            self.notification_label.config(text="Stopping service...", fg="orange")
-            try:
-                subprocess.run(['sudo', 'systemctl', 'stop', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service stopped successfully.", fg="green")
-            except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to stop service.", fg="red")
-
-        self.toggle_button.config(background="#4CAF50" if self.toggle_var.get() else "red")
-
-        # Clear the notification after 2 seconds
-        self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
+            self.notification_label.config(text="Stopping service...")
+            # Add the action to stop the virtualhere.service here (async if needed)
+            self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
 
     def set_initial_toggle_position(self):
-        # Get the initial status of the service from systemctl
-        try:
-            result = subprocess.run(['systemctl', 'is-active', 'virtualhere.service'], capture_output=True, text=True, check=True)
-            initial_status = (result.stdout.strip() == "active")
-        except subprocess.CalledProcessError:
-            # In case of an error (e.g., service not found), assume the service is inactive
-            initial_status = False
-
-        # Set the initial position of the toggle and update the UI accordingly
+        # Add your logic here to determine the initial status of the service (e.g., is it running or stopped)
+        # Based on the status, set the initial position of the toggle_var and update the UI accordingly.
+        # Example:
+        initial_status = True  # Set this to True or False based on the actual status
         self.toggle_var.set(initial_status)
-        self.toggle_button.config(background="#4CAF50" if initial_status else "red")
+
+        if initial_status:
+            self.notification_label.config(text="Starting service...")
+            # Add the action to start the virtualhere.service here (async if needed)
+            self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
+        else:
+            self.notification_label.config(text="Stopping service...")
+            # Add the action to stop the virtualhere.service here (async if needed)
+            self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
 
     def close_app(self, event):
         # Action to close the application gracefully
@@ -82,6 +81,8 @@ class VirtualHereToggleUI:
 
 def main():
     root = tk.Tk()
+    root.style = ttk.Style()
+    root.style.configure("Toggle.TCheckbutton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
 
     app = VirtualHereToggleUI(root)
     root.mainloop()
