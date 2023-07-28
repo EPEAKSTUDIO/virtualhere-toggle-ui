@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script version
-VERSION="v0.3"
+VERSION="v0.5"
 
 # Function to display status messages
 function display_status() {
@@ -20,61 +20,86 @@ function check_command() {
   fi
 }
 
-# Create the autostart directory if it doesn't exist
-mkdir -p ~/.config/autostart
+# Check if running with root/sudo permissions
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root (use sudo)" 
+   exit 1
+fi
 
-# Display header
-display_status "VirtualHere Toggle UI - Installation"
-
-# Install Python and Tkinter
-display_status "Installing Python and Tkinter..."
-sudo apt update
-sudo apt install -y python3 python3-tk
+# Check if python3 and python3-tk are installed
+display_status "Checking for Python 3 and Python Tkinter"
+dpkg -l python3 python3-tk
 check_command
 
-# Download the Python script from your GitHub repository
-display_status "Downloading Python script..."
-wget -O /tmp/virtualhere_service_gui.py https://raw.githubusercontent.com/EPEAKSTUDIO/virtualhere-toggle-ui/main/virtualhere_service_gui.py
+# Install required packages
+display_status "Installing required packages"
+apt update
+apt install -y python3 python3-tk
 check_command
 
-# Configure the script to start on boot using systemd
-display_status "Configuring systemd service..."
-sudo tee /etc/systemd/system/virtualhere_toggle_ui.service > /dev/null << EOF
+# Clone the VirtualHere Toggle UI repository
+display_status "Cloning VirtualHere Toggle UI repository"
+git clone https://github.com/EPEAKSTUDIO/virtualhere-toggle-ui.git /tmp/virtualhere-toggle-ui
+check_command
+
+# Copy the VirtualHere Toggle UI script to /usr/local/bin
+display_status "Copying VirtualHere Toggle UI script"
+cp /tmp/virtualhere-toggle-ui/virtualhere_service_gui.py /usr/local/bin/virtualhere_service_gui.py
+chmod +x /usr/local/bin/virtualhere_service_gui.py
+check_command
+
+# Clean up
+display_status "Cleaning up"
+rm -rf /tmp/virtualhere-toggle-ui
+check_command
+
+# Create the systemd service unit file
+display_status "Creating systemd service unit file"
+cat > /etc/systemd/system/virtualhere-toggle-ui.service << EOL
 [Unit]
 Description=VirtualHere Toggle UI
-After=network.target
+After=graphical.target
 
 [Service]
-ExecStart=/usr/bin/python3 /tmp/virtualhere_service_gui.py
-WorkingDirectory=/tmp
-StandardOutput=null
+User=$USER
+ExecStart=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
+Restart=on-abort
 
 [Install]
-WantedBy=multi-user.target
-EOF
+WantedBy=graphical.target
+EOL
 check_command
 
-# Enable the service
-display_status "Enabling the VirtualHere Toggle UI service..."
-sudo systemctl enable virtualhere_toggle_ui.service
+# Enable and start the service
+display_status "Enabling and starting the service"
+systemctl enable virtualhere-toggle-ui.service
+systemctl start virtualhere-toggle-ui.service
 check_command
 
-# Start the service
-display_status "Starting the VirtualHere Toggle UI service..."
-sudo systemctl start virtualhere_toggle_ui.service
+# Create desktop shortcut for manual launch
+display_status "Creating desktop shortcut"
+cat > ~/Desktop/VirtualHere_Toggle_UI.desktop << EOL
+[Desktop Entry]
+Name=VirtualHere Toggle UI
+Exec=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
+Icon=/path/to/your/icon.png  # Replace this with the actual path to your icon (if you have one)
+Type=Application
+Terminal=false
+EOL
 check_command
 
-# Installation completed
-echo "-------------------------------------"
-echo "VirtualHere Toggle UI is now installed and running as a system service!"
-echo "The GUI will automatically start on boot."
-echo "Enjoy using the VirtualHere Toggle UI!"
-echo "-------------------------------------"
+# Set permission for the desktop shortcut
+chmod +x ~/Desktop/VirtualHere_Toggle_UI.desktop
+check_command
 
-# Prompt for reboot
-read -p "Do you want to restart your Raspberry Pi now? (Y/N): " choice
-if [[ $choice =~ ^[Yy]$ ]]; then
-  sudo reboot
+# Ask user if they want to reboot the system
+echo "Do you want to reboot the system now? (Y/N)"
+read -r answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+  echo "Rebooting the system..."
+  sleep 2
+  reboot
 else
-  echo "You can manually reboot your Raspberry Pi to start the VirtualHere Toggle UI."
+  echo "Installation of VirtualHere Toggle UI (Version: $VERSION) completed."
+  echo "The application will automatically start on the next boot, and you can also manually start it from the desktop shortcut."
 fi
