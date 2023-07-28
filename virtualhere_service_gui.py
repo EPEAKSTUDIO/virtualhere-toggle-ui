@@ -11,39 +11,32 @@ class VirtualHereToggleUI:
         # Center the window on the screen
         self.root.eval('tk::PlaceWindow . center')
 
+        # Create a frame to hold the toggle and notifications at the center of the screen
+        center_frame = ttk.Frame(self.root)
+        center_frame.pack(expand=True)
+
         # Configure the vertical space to take about 70% of the screen's height
-        self.root.grid_rowconfigure(0, weight=7)
-        self.root.grid_rowconfigure(1, weight=3)
+        center_frame.grid_rowconfigure(0, weight=7)
+        center_frame.grid_rowconfigure(1, weight=3)
 
         # Create the on/off toggle button
         self.toggle_var = tk.BooleanVar()
         self.toggle_button = ttk.Checkbutton(
-            self.root,
+            center_frame,
             text="VirtualHere Service",
             variable=self.toggle_var,
             command=self.on_toggle_change,
             style="Toggle.TCheckbutton"
         )
-        self.toggle_button.grid(row=0, column=0, sticky="nsew")
+        self.toggle_button.pack(expand=True)
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
-            self.root,
+            center_frame,
             text="",
             font=("Helvetica", 12)
         )
-        self.notification_label.grid(row=1, column=0, sticky="nsew")
-
-        # Create the close button (X symbol)
-        close_btn = tk.Label(
-            self.root,
-            text="X",
-            font=("Helvetica", 12, "bold"),
-            fg="red",
-            cursor="hand2"
-        )
-        close_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
-        close_btn.bind("<Button-1>", self.close_app)
+        self.notification_label.pack(expand=True)
 
         # Set the initial position of the toggle based on the service status
         self.set_initial_toggle_position()
@@ -57,6 +50,7 @@ class VirtualHereToggleUI:
                 self.notification_label.config(text="Service started successfully.")
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to start service.")
+                self.toggle_var.set(False)  # Set the toggle back to "OFF"
         else:
             self.notification_label.config(text="Stopping service...")
             try:
