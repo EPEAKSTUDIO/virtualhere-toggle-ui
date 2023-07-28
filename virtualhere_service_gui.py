@@ -33,6 +33,17 @@ class VirtualHereToggleUI:
         )
         self.notification_label.grid(row=1, column=0, sticky="nsew")
 
+        # Create the close button (X symbol)
+        close_btn = tk.Label(
+            self.root,
+            text="X",
+            font=("Helvetica", 12, "bold"),
+            fg="red",
+            cursor="hand2"
+        )
+        close_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
+        close_btn.bind("<Button-1>", self.close_app)
+
         # Set the initial position of the toggle based on the service status (change this according to your logic)
         self.set_initial_toggle_position()  # Add your logic to determine the initial status
 
@@ -63,6 +74,10 @@ class VirtualHereToggleUI:
             # Add the action to stop the virtualhere.service here (async if needed)
             self.notification_label.after(2000, lambda: self.notification_label.config(text=""))
 
+    def close_app(self, event):
+        # Action to close the application gracefully
+        self.root.destroy()
+
 def main():
     root = tk.Tk()
     root.style = ttk.Style()
@@ -73,4 +88,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
