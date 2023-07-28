@@ -16,14 +16,17 @@ class VirtualHereToggleUI:
         center_frame.grid_rowconfigure(0, weight=7)
         center_frame.grid_rowconfigure(1, weight=3)
 
-        # Create the on/off toggle button (large 16:9 ratio rectangle)
+        # Create a custom button style (large 16:9 ratio tile)
+        self.root.style = ttk.Style()
+        self.root.style.configure("Tile.TButton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
+
+        # Create the on/off toggle button
         self.toggle_var = tk.BooleanVar()
-        self.toggle_button = tk.Button(
+        self.toggle_button = ttk.Button(
             center_frame,
             text="USB over IP",
-            font=("Helvetica", 20),
-            relief="flat",
-            borderwidth=0,
+            variable=self.toggle_var,
+            style="Tile.TButton",
             command=self.on_toggle_change
         )
         self.toggle_button.pack(expand=True, fill=tk.BOTH)
@@ -68,7 +71,6 @@ class VirtualHereToggleUI:
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to stop service.", fg="red")
 
-        self.toggle_button.config(text="USB over IP", fg="green" if self.toggle_var.get() else "red")
         self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
 
     def set_initial_toggle_position(self):
@@ -82,7 +84,11 @@ class VirtualHereToggleUI:
 
         # Set the initial position of the toggle and update the UI accordingly
         self.toggle_var.set(initial_status)
-        self.toggle_button.config(text="USB over IP", fg="green" if initial_status else "red")
+        self.update_toggle_color()
+
+    def update_toggle_color(self):
+        # Update the toggle color based on the status
+        self.toggle_button.config(style="Tile.TButton" if self.toggle_var.get() else "Tile.TButtonRed")
 
     def close_app(self, event):
         # Action to close the application gracefully
@@ -90,8 +96,10 @@ class VirtualHereToggleUI:
 
 def main():
     root = tk.Tk()
+
+    # Create a custom button style for the red color
     root.style = ttk.Style()
-    root.style.configure("Toggle.TCheckbutton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
+    root.style.configure("Tile.TButtonRed", background="red", foreground="white", font=("Helvetica", 20, "bold"))
 
     app = VirtualHereToggleUI(root)
     root.mainloop()
