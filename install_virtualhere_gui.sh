@@ -17,6 +17,9 @@ function check_command() {
   fi
 }
 
+# Create the autostart directory if it doesn't exist
+mkdir -p ~/.config/autostart
+
 # Display header
 display_status "VirtualHere Toggle UI - Installation"
 
@@ -31,26 +34,37 @@ display_status "Downloading Python script..."
 wget -O /tmp/virtualhere_service_gui.py https://raw.githubusercontent.com/EPEAKSTUDIO/virtualhere-toggle-ui/main/virtualhere_service_gui.py
 check_command
 
-# Configure the script to start on boot
-display_status "Configuring autostart..."
-cat <<EOF | sudo tee ~/.config/autostart/virtualhere_service_gui.desktop > /dev/null
-[Desktop Entry]
-Name=VirtualHere Service GUI
-Type=Application
-Exec=/usr/bin/python3 /tmp/virtualhere_service_gui.py
+# Configure the script to start on boot using systemd
+display_status "Configuring systemd service..."
+sudo tee /etc/systemd/system/virtualhere_toggle_ui.service > /dev/null << EOF
+[Unit]
+Description=VirtualHere Toggle UI
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /tmp/virtualhere_service_gui.py
+WorkingDirectory=/tmp
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
 EOF
 check_command
 
-# Make the script executable
-display_status "Making the script executable..."
-chmod +x /tmp/virtualhere_service_gui.py
+# Enable the service
+display_status "Enabling the VirtualHere Toggle UI service..."
+sudo systemctl enable virtualhere_toggle_ui.service
+check_command
+
+# Start the service
+display_status "Starting the VirtualHere Toggle UI service..."
+sudo systemctl start virtualhere_toggle_ui.service
 check_command
 
 # Installation completed
 echo "-------------------------------------"
-echo "VirtualHere Toggle UI is now installed!"
-echo "A reboot is required for the changes to take effect."
-echo "After reboot, the GUI will automatically start on boot."
+echo "VirtualHere Toggle UI is now installed and running as a system service!"
+echo "The GUI will automatically start on boot."
 echo "Enjoy using the VirtualHere Toggle UI!"
 echo "-------------------------------------"
 
