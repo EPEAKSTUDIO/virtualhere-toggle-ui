@@ -8,7 +8,7 @@ To install and run the VirtualHere Toggle UI on your Raspberry Pi, download and 
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/EPEAKSTUDIO/virtualhere-toggle-ui/main/install_virtualhere_gui.sh | bash
-
+```
 
 The installer script will take care of setting up the necessary configurations and dependencies. After the installation is complete, your Raspberry Pi will reboot, and the VirtualHere Toggle UI will start automatically on boot, providing a touchscreen interface to control the "virtualhere.service" status.
 
