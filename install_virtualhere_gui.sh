@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script version
 
-VERSION="v0.7"
+VERSION="v0.8"
 
 # Function to display status messages
 function display_status() {
@@ -61,12 +61,14 @@ display_status "Creating systemd service unit file"
 cat > /etc/systemd/system/virtualhere-toggle-ui.service << EOL
 [Unit]
 Description=VirtualHere Toggle UI
-After=graphical.target
+After=graphical.target network.target
+Wants=network.target
 
 [Service]
 User=$USER
 ExecStart=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
 Restart=on-abort
+RestartSec=5  # Optional: Add a delay of 5 seconds before restarting the service
 
 [Install]
 WantedBy=graphical.target
