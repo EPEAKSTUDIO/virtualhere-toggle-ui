@@ -85,6 +85,10 @@ def main():
     root.style.configure("Toggle.TCheckbutton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
 
     app = VirtualHereToggleUI(root)
+
+    # Set the application to start in fullscreen mode
+    root.attributes("-fullscreen", True)
+
     root.mainloop()
 
 if __name__ == "__main__":
