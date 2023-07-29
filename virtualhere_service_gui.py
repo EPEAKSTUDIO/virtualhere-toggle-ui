@@ -55,6 +55,10 @@ class VirtualHereToggleUI:
 
     # ... Rest of the code remains the same
 
+    def close_app(self, event=None):
+        # Action to close the application gracefully
+        self.root.destroy()
+
 def main():
     root = tk.Tk()
     root.style = ttk.Style()

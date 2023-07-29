@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script version
 
-VERSION="v0.24"
+VERSION="v0.25"
 
 # Function to display status messages
 function display_status() {
