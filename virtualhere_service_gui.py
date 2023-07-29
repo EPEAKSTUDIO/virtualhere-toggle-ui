@@ -6,25 +6,27 @@ class VirtualHereToggleUI:
     def __init__(self, root):
         self.root = root
         self.root.title("VirtualHere Toggle UI")
-        self.root.geometry("400x600")  # Set the initial window size
+        self.root.geometry("480x320")  # Set the initial window size
 
         # Center the window on the screen
         self.root.eval('tk::PlaceWindow . center')
 
-        # Create a canvas with a green background (16:9 aspect ratio)
-        self.canvas = tk.Canvas(self.root, bg="#4CAF50", highlightthickness=0)
-        self.canvas.pack(fill=tk.BOTH, expand=True)
+        # Create a canvas with a green background (80% of the screen resolution)
+        canvas_width = int(self.root.winfo_screenwidth() * 0.8)
+        canvas_height = int(self.root.winfo_screenheight() * 0.8)
+        self.canvas = tk.Canvas(self.root, bg="#4CAF50", width=canvas_width, height=canvas_height, highlightthickness=0)
+        self.canvas.pack(expand=True)
 
         # Create the on/off toggle button
         self.toggle_var = tk.BooleanVar()
         self.toggle_button = ttk.Checkbutton(
             self.canvas,
-            text="VirtualHere Service",
+            text="USB over IP",
             variable=self.toggle_var,
             command=self.on_toggle_change,
             style="Toggle.TCheckbutton"
         )
-        self.toggle_button_window = self.canvas.create_window(0, 0, anchor="nw", window=self.toggle_button)
+        self.toggle_button_window = self.canvas.create_window(canvas_width/2, canvas_height/2, anchor="center", window=self.toggle_button)
 
         # Create the text notification label (initially empty)
         self.notification_label = ttk.Label(
@@ -32,15 +34,15 @@ class VirtualHereToggleUI:
             text="",
             font=("Helvetica", 12)
         )
-        self.notification_label_window = self.canvas.create_window(0, 0, anchor="center", window=self.notification_label)
+        self.notification_label_window = self.canvas.create_window(canvas_width/2, canvas_height * 0.9, anchor="center", window=self.notification_label)
 
-        # Bind the close event to the root
-        self.root.bind("<Escape>", self.close_app)
+        # Bind the click event to the canvas
+        self.canvas.bind("<Button-1>", self.on_toggle_change)
 
         # Set the initial position of the toggle based on the service status (change this according to your logic)
         self.set_initial_toggle_position()  # Add your logic to determine the initial status
 
-    def on_toggle_change(self):
+    def on_toggle_change(self, event=None):
         # Handle the action when the toggle is clicked
         self.toggle_var.set(not self.toggle_var.get())
 
@@ -75,7 +77,7 @@ class VirtualHereToggleUI:
         # Set the initial position of the toggle and update the UI accordingly
         self.toggle_var.set(initial_status)
 
-    def close_app(self, event):
+    def close_app(self):
         # Action to close the application gracefully
         self.root.destroy()
 
