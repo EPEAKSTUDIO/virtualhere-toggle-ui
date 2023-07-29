@@ -36,60 +36,24 @@ class VirtualHereToggleUI:
         )
         self.notification_label_window = self.canvas.create_window(canvas_width/2, canvas_height * 0.9, anchor="center", window=self.notification_label)
 
+        # Create the close button (red cross)
+        close_btn = tk.Label(
+            self.canvas,
+            text="X",
+            font=("Helvetica", 12, "bold"),
+            fg="red",
+            cursor="hand2"
+        )
+        close_btn_window = self.canvas.create_window(canvas_width - 20, 20, anchor="ne", window=close_btn)
+        close_btn.bind("<Button-1>", self.close_app)
+
         # Bind the click event to the canvas
         self.canvas.bind("<Button-1>", self.on_toggle_change)
 
         # Set the initial position of the toggle based on the service status (change this according to your logic)
         self.set_initial_toggle_position()  # Add your logic to determine the initial status
 
-    def on_toggle_change(self, event=None):
-        # Handle the action when the toggle is clicked
-        self.toggle_var.set(not self.toggle_var.get())
-        self.update_toggle_color()
-
-        if self.toggle_var.get():
-            self.notification_label.config(text="Starting service...", fg="orange")
-            try:
-                subprocess.run(['sudo', 'systemctl', 'start', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service started successfully.", fg="green")
-                self.set_initial_toggle_position()
-            except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to start service.", fg="red")
-                self.toggle_var.set(False)  # Set the toggle back to "OFF"
-        else:
-            self.notification_label.config(text="Stopping service...", fg="orange")
-            try:
-                subprocess.run(['sudo', 'systemctl', 'stop', 'virtualhere.service'], check=True)
-                self.notification_label.config(text="Service stopped successfully.", fg="green")
-                self.set_initial_toggle_position()
-            except subprocess.CalledProcessError:
-                self.notification_label.config(text="Failed to stop service.", fg="red")
-
-        # Clear the notification after 2 seconds
-        self.notification_label.after(2000, lambda: self.notification_label.config(text="", fg="black"))
-
-    def set_initial_toggle_position(self):
-        # Get the initial status of the service from systemctl
-        try:
-            result = subprocess.run(['systemctl', 'is-active', 'virtualhere.service'], capture_output=True, text=True, check=True)
-            initial_status = (result.stdout.strip() == "active")
-        except subprocess.CalledProcessError:
-            # In case of an error (e.g., service not found), assume the service is inactive
-            initial_status = False
-
-        # Set the initial position of the toggle and update the UI accordingly
-        self.toggle_var.set(initial_status)
-        self.update_toggle_color()
-
-    def update_toggle_color(self):
-        if self.toggle_var.get():
-            self.toggle_button.config(style="Toggle.TCheckbuttonOn")
-        else:
-            self.toggle_button.config(style="Toggle.TCheckbuttonOff")
-
-    def close_app(self):
-        # Action to close the application gracefully
-        self.root.destroy()
+    # ... Rest of the code remains the same
 
 def main():
     root = tk.Tk()
