@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script version
 
-VERSION="v0.25"
+VERSION="v0.30"
 
 # Function to display status messages
 function display_status() {
@@ -29,15 +29,25 @@ fi
 # Display version information
 echo "VirtualHere Toggle UI Installer (Version: $VERSION)"
 
-# Check if python3 and python3-tk are installed
-display_status "Checking for Python 3 and Python Tkinter"
-dpkg -l python3 python3-tk
+# Check if python3 is installed
+display_status "Checking for Python 3"
+command -v python3
+check_command
+
+# Check if pip3 is installed
+display_status "Checking for pip3"
+command -v pip3
 check_command
 
 # Install required packages
 display_status "Installing required packages"
 apt update
-apt install -y python3 python3-tk
+apt install -y python3-pip
+check_command
+
+# Install Kivy
+display_status "Installing Kivy"
+pip3 install kivy
 check_command
 
 # Clone the VirtualHere Toggle UI repository
@@ -47,8 +57,8 @@ check_command
 
 # Copy the VirtualHere Toggle UI script to /usr/local/bin
 display_status "Copying VirtualHere Toggle UI script"
-cp /tmp/virtualhere-toggle-ui/virtualhere_service_gui.py /usr/local/bin/virtualhere_service_gui.py
-chmod +x /usr/local/bin/virtualhere_service_gui.py
+cp /tmp/virtualhere-toggle-ui/virtualhere_toggle_ui.py /usr/local/bin/virtualhere_toggle_ui.py
+chmod +x /usr/local/bin/virtualhere_toggle_ui.py
 check_command
 
 # Clean up
@@ -65,8 +75,8 @@ After=graphical.target network.target
 Wants=network.target
 
 [Service]
-User=$USER
-ExecStart=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
+User=$SUDO_USER
+ExecStart=/usr/bin/python3 /usr/local/bin/virtualhere_toggle_ui.py
 Restart=on-abort
 RestartSec=5  # Optional: Add a delay of 5 seconds before restarting the service
 
@@ -87,7 +97,7 @@ desktop_file="/home/$SUDO_USER/Desktop/VirtualHere_Toggle_UI.desktop"
 cat > "$desktop_file" << EOL
 [Desktop Entry]
 Name=VirtualHere Toggle UI
-Exec=/usr/bin/python3 /usr/local/bin/virtualhere_service_gui.py
+Exec=/usr/bin/python3 /usr/local/bin/virtualhere_toggle_ui.py
 Icon=/path/to/your/icon.png  # Replace this with the actual path to your icon (if you have one)
 Type=Application
 Terminal=false
