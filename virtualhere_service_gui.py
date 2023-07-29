@@ -45,12 +45,14 @@ class VirtualHereToggleUI:
     def on_toggle_change(self, event=None):
         # Handle the action when the toggle is clicked
         self.toggle_var.set(not self.toggle_var.get())
+        self.update_toggle_color()
 
         if self.toggle_var.get():
             self.notification_label.config(text="Starting service...", fg="orange")
             try:
                 subprocess.run(['sudo', 'systemctl', 'start', 'virtualhere.service'], check=True)
                 self.notification_label.config(text="Service started successfully.", fg="green")
+                self.set_initial_toggle_position()
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to start service.", fg="red")
                 self.toggle_var.set(False)  # Set the toggle back to "OFF"
@@ -59,6 +61,7 @@ class VirtualHereToggleUI:
             try:
                 subprocess.run(['sudo', 'systemctl', 'stop', 'virtualhere.service'], check=True)
                 self.notification_label.config(text="Service stopped successfully.", fg="green")
+                self.set_initial_toggle_position()
             except subprocess.CalledProcessError:
                 self.notification_label.config(text="Failed to stop service.", fg="red")
 
@@ -76,6 +79,13 @@ class VirtualHereToggleUI:
 
         # Set the initial position of the toggle and update the UI accordingly
         self.toggle_var.set(initial_status)
+        self.update_toggle_color()
+
+    def update_toggle_color(self):
+        if self.toggle_var.get():
+            self.toggle_button.config(style="Toggle.TCheckbuttonOn")
+        else:
+            self.toggle_button.config(style="Toggle.TCheckbuttonOff")
 
     def close_app(self):
         # Action to close the application gracefully
@@ -85,6 +95,11 @@ def main():
     root = tk.Tk()
     root.style = ttk.Style()
     root.style.configure("Toggle.TCheckbutton", background="#4CAF50", foreground="white", font=("Helvetica", 20, "bold"))
+    root.style.map("Toggle.TCheckbutton",
+                   foreground=[("active", "white"), ("!active", "white")],
+                   background=[("active", "orange"), ("!active", "#4CAF50")])
+    root.style.configure("Toggle.TCheckbuttonOn", background="red")
+    root.style.configure("Toggle.TCheckbuttonOff", background="green")
 
     app = VirtualHereToggleUI(root)
 
